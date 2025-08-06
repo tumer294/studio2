@@ -1,0 +1,133 @@
+ 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+ [LaunchDarkly] LaunchDarkly client initialized
+/~:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+main-a58918315fd17f3e.js:1 Uncaught (in promise) 
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+ Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'battery'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'layout-animations'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'navigation-override'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'oversized-images'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'publickey-credentials'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'speaker-selection'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'unoptimized-images'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'unsized-media'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'pointer-lock'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html:32 Unrecognized feature: 'battery'.
+workspace_iframe.html:32 Unrecognized feature: 'battery'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.
+node_modules_next_di…_8f19e6fb._.js:1332 Uncaught 
+node_modules_next_di…_8f19e6fb._.js:1332 Uncaught 
+ [Fast Refresh] done in NaNms
+ [Fast Refresh] done in NaNms
+ [Fast Refresh] rebuilding
+ [Fast Refresh] rebuilding
+ [Fast Refresh] done in 4194ms
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+ [Fast Refresh] done in 4195ms
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+Console.js:61 Failed to get download URL: {"error":"Server not configured for file operations."}
+Mt.forEach.n.<computed> @ Console.js:61
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+Console.js:61 Failed to get download URL: {"error":"Server not configured for file operations."}
+Mt.forEach.n.<computed> @ Console.js:61
+Console.js:61 [Fast Refresh] rebuilding
+ [Fast Refresh] rebuilding
+Console.js:61 [Fast Refresh] done in 152ms
+ [Fast Refresh] done in 155ms
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+Console.js:61 [Fast Refresh] rebuilding
+ [Fast Refresh] rebuilding
+Console.js:61 [Fast Refresh] done in 3245ms
+0c6cb659-8c7a-4db3-8413-2961f64e083b-00-1v7x79i6dgici.pike.replit.dev/api/upload:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+0c6cb659-8c7a-4db3-8413-2961f64e083b-00-1v7x79i6dgici.pike.replit.dev/api/upload:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+Console.js:61 Upload Error: Error: Server not configured for file operations.
+    at handlePost (create-post.tsx:94:21)
+Mt.forEach.n.<computed> @ Console.js:61
+ [Fast Refresh] done in 3287ms
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+download:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+Console.js:61 Failed to get download URL: {"error":"Server not configured for file operations."}
+Mt.forEach.n.<computed> @ Console.js:61
+error @ intercept-console-error.ts:40
+getDownloadUrl @ post-card.tsx:50
+Console.js:61 Failed to get download URL: {"error":"Server not configured for file operations."}
+Mt.forEach.n.<computed> @ Console.js:61
+error @ intercept-console-error.ts:40
+getDownloadUrl @ post-card.tsx:50

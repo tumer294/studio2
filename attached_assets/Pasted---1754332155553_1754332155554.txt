@@ -1,0 +1,86 @@
+ 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+ [LaunchDarkly] LaunchDarkly client initialized
+/~:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+main-a58918315fd17f3e.js:1 Uncaught (in promise) 
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+ Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'battery'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'layout-animations'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'navigation-override'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+ Unrecognized feature: 'oversized-images'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+framework-2d1448fb8c1fa64d.js:1 Unrecognized feature: 'publickey-credentials'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+framework-2d1448fb8c1fa64d.js:1 Unrecognized feature: 'speaker-selection'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+framework-2d1448fb8c1fa64d.js:1 Unrecognized feature: 'unoptimized-images'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+framework-2d1448fb8c1fa64d.js:1 Unrecognized feature: 'unsized-media'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+framework-2d1448fb8c1fa64d.js:1 Unrecognized feature: 'pointer-lock'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+framework-2d1448fb8c1fa64d.js:1 Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+framework-2d1448fb8c1fa64d.js:1 Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-2d1448fb8c1fa64d.js:1
+stallwart.build.js:1 stallwart: failed ping 1
+stallwart.build.js:1 stallwart: failed ping 2
+stallwart.build.js:1 stallwart: failed ping 3
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html:32 Unrecognized feature: 'battery'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.
+0c6cb659-8c7a-4db3-8413-2961f64e083b-00-1v7x79i6dgici.pike.replit.dev/api/upload:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+0c6cb659-8c7a-4db3-8413-2961f64e083b-00-1v7x79i6dgici.pike.replit.dev/api/upload:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+Console.js:61 [Fast Refresh] rebuilding
+Console.js:61 [Fast Refresh] done in 388ms
+0c6cb659-8c7a-4db3-8413-2961f64e083b-00-1v7x79i6dgici.pike.replit.dev/%22%22:1  Failed to load resource: the server responded with a status of 404 (Not Found)
+0c6cb659-8c7a-4db3-8413-2961f64e083b-00-1v7x79i6dgici.pike.replit.dev/api/upload:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+Console.js:61 Error: Failed to process upload request
+    at handleImageUpload (page.tsx:294:15)
+Mt.forEach.n.<computed> @ Console.js:61
+Düğüm mevcut sayfada bulunamadı.

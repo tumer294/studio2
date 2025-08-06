@@ -1,0 +1,53 @@
+
+
+1/1
+
+Next.js 15.3.3 (stale)
+Turbopack
+Console Error
+
+
+Error: addDoc is not defined
+
+Call Stack
+18
+
+handleSendNotification
+file:///home/runner/workspace/.next/static/chunks/src_7aef53eb._.js (1538:13)
+overrideProps.<computed>
+file:///home/runner/workspace/.next/static/chunks/node_modules_fcee8e35._.js (8021:21)
+executeDispatch
+file:///home/runner/workspace/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js (10906:13)
+runWithFiberInDEV
+file:///home/runner/workspace/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js (3073:74)
+processDispatchQueue
+file:///home/runner/workspace/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js (10932:41)
+<unknown>
+file:///home/runner/workspace/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js (11223:13)
+batchedUpdates$1
+file:///home/runner/workspace/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js (4384:44)
+dispatchEventForPluginEventSystem
+file:///home/runner/workspace/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js (11008:9)
+dispatchEvent
+file:///home/runner/workspace/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js (13121:37)
+dispatchDiscreteEvent
+file:///home/runner/workspace/.next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js (13103:64)
+button
+<anonymous> (0:0)
+_c
+file:///home/runner/workspace/.next/static/chunks/src_22644e3e._.js (2706:214)
+AdminPage
+file:///home/runner/workspace/.next/static/chunks/src_7aef53eb._.js (1822:277)
+Slot
+file:///home/runner/workspace/.next/static/chunks/node_modules_fcee8e35._.js (7982:206)
+Primitive.button
+file:///home/runner/workspace/.next/static/chunks/node_modules_fcee8e35._.js (8468:210)
+DialogClose
+file:///home/runner/workspace/.next/static/chunks/node_modules_fcee8e35._.js (16656:206)
+AdminPage
+file:///home/runner/workspace/.next/static/chunks/src_7aef53eb._.js (1820:263)
+ClientPageRoot
+file:///home/runner/workspace/.next/static/chunks/node_modules_next_dist_1a6ee436._.js (2061:50)
+1
+2
+Was this helpful?

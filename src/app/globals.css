@@ -1,0 +1,261 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 88 14% 89%;
+    --foreground: 147 60% 10%;
+    --card: 88 14% 95%;
+    --card-foreground: 147 60% 10%;
+    --popover: 88 14% 95%;
+    --popover-foreground: 147 60% 10%;
+    --primary: 147 60% 24%;
+    --primary-foreground: 88 14% 95%;
+    --secondary: 88 14% 80%;
+    --secondary-foreground: 147 60% 10%;
+    --muted: 88 14% 80%;
+    --muted-foreground: 147 20% 35%;
+    --accent: 45 65% 52%;
+    --accent-foreground: 45 65% 5%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 88 14% 80%;
+    --input: 88 14% 85%;
+    --ring: 147 60% 24%;
+    --radius: 0.8rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --font-sans: var(--font-pt-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas,
+    "Liberation Mono", Menlo, monospace;
+  --font-display: var(--font-playfair), serif;
+  }
+
+  /* Islamic Blue Theme - Deep Navy Blue */
+  .theme-islamic-blue {
+    --background: 220 30% 6%;
+    --foreground: 210 50% 90%;
+    --card: 220 25% 10%;
+    --card-foreground: 210 50% 90%;
+    --popover: 220 25% 10%;
+    --popover-foreground: 210 50% 90%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 220 30% 6%;
+    --secondary: 220 20% 15%;
+    --secondary-foreground: 210 50% 90%;
+    --muted: 220 20% 15%;
+    --muted-foreground: 210 20% 60%;
+    --accent: 280 100% 70%;
+    --accent-foreground: 280 100% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 210 100% 50%;
+  }
+
+  /* Islamic Purple Theme - Rich Amethyst */
+  .theme-islamic-purple {
+    --background: 270 40% 95%;
+    --foreground: 270 80% 15%;
+    --card: 270 30% 98%;
+    --card-foreground: 270 80% 15%;
+    --popover: 270 30% 98%;
+    --popover-foreground: 270 80% 15%;
+    --primary: 270 80% 45%;
+    --primary-foreground: 270 30% 98%;
+    --secondary: 270 20% 85%;
+    --secondary-foreground: 270 80% 15%;
+    --muted: 270 20% 85%;
+    --muted-foreground: 270 30% 35%;
+    --accent: 320 100% 60%;
+    --accent-foreground: 320 100% 95%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 270 20% 80%;
+    --input: 270 20% 82%;
+    --ring: 270 80% 45%;
+  }
+
+  /* Islamic Rose Theme - Warm Coral */
+  .theme-islamic-rose {
+    --background: 15 60% 96%;
+    --foreground: 15 80% 20%;
+    --card: 15 50% 99%;
+    --card-foreground: 15 80% 20%;
+    --popover: 15 50% 99%;
+    --popover-foreground: 15 80% 20%;
+    --primary: 15 80% 55%;
+    --primary-foreground: 15 50% 99%;
+    --secondary: 15 30% 88%;
+    --secondary-foreground: 15 80% 20%;
+    --muted: 15 30% 88%;
+    --muted-foreground: 15 40% 40%;
+    --accent: 340 90% 65%;
+    --accent-foreground: 340 90% 95%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 15 30% 82%;
+    --input: 15 30% 85%;
+    --ring: 15 80% 55%;
+  }
+
+  /* Islamic Teal Theme - Deep Emerald */
+  .theme-islamic-teal {
+    --background: 160 50% 8%;
+    --foreground: 160 40% 85%;
+    --card: 160 40% 12%;
+    --card-foreground: 160 40% 85%;
+    --popover: 160 40% 12%;
+    --popover-foreground: 160 40% 85%;
+    --primary: 160 90% 40%;
+    --primary-foreground: 160 40% 12%;
+    --secondary: 160 30% 18%;
+    --secondary-foreground: 160 40% 85%;
+    --muted: 160 30% 18%;
+    --muted-foreground: 160 20% 55%;
+    --accent: 45 90% 55%;
+    --accent-foreground: 45 90% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 160 30% 22%;
+    --input: 160 30% 25%;
+    --ring: 160 90% 40%;
+  }
+
+  /* Midnight Theme - True Black */
+  .theme-midnight {
+    --background: 0 0% 3%;
+    --foreground: 240 20% 95%;
+    --card: 0 0% 7%;
+    --card-foreground: 240 20% 95%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 240 20% 95%;
+    --primary: 240 100% 70%;
+    --primary-foreground: 0 0% 3%;
+    --secondary: 240 10% 12%;
+    --secondary-foreground: 240 20% 95%;
+    --muted: 240 10% 12%;
+    --muted-foreground: 240 10% 60%;
+    --accent: 300 100% 70%;
+    --accent-foreground: 300 100% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 10% 15%;
+    --input: 240 10% 18%;
+    --ring: 240 100% 70%;
+  }
+
+  /* Ocean Theme - Vibrant Aqua */
+  .theme-ocean {
+    --background: 190 70% 92%;
+    --foreground: 200 90% 15%;
+    --card: 190 60% 96%;
+    --card-foreground: 200 90% 15%;
+    --popover: 190 60% 96%;
+    --popover-foreground: 200 90% 15%;
+    --primary: 200 90% 35%;
+    --primary-foreground: 190 60% 96%;
+    --secondary: 190 40% 80%;
+    --secondary-foreground: 200 90% 15%;
+    --muted: 190 40% 80%;
+    --muted-foreground: 200 40% 30%;
+    --accent: 170 100% 40%;
+    --accent-foreground: 170 100% 95%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 190 40% 75%;
+    --input: 190 40% 78%;
+    --ring: 200 90% 35%;
+  }
+
+  .dark {
+    --background: 147 20% 8%;
+    --foreground: 88 14% 89%;
+    --card: 147 20% 12%;
+    --card-foreground: 88 14% 89%;
+    --popover: 147 20% 8%;
+    --popover-foreground: 88 14% 89%;
+    --primary: 147 60% 35%;
+    --primary-foreground: 88 14% 95%;
+    --secondary: 147 20% 15%;
+    --secondary-foreground: 88 14% 95%;
+    --muted: 147 20% 15%;
+    --muted-foreground: 88 14% 60%;
+    --accent: 45 65% 52%;
+    --accent-foreground: 45 65% 10%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 147 20% 15%;
+    --input: 147 20% 15%;
+    --ring: 147 60% 35%;
+  }
+
+  .theme-islamic-yellow {
+    --background: 45 50% 90%;
+    --foreground: 45 60% 10%;
+    --card: 45 50% 96%;
+    --card-foreground: 45 60% 10%;
+    --popover: 45 50% 96%;
+    --popover-foreground: 45 60% 10%;
+    --primary: 45 65% 42%;
+    --primary-foreground: 45 50% 96%;
+    --secondary: 45 50% 82%;
+    --secondary-foreground: 45 60% 10%;
+    --muted: 45 50% 82%;
+    --muted-foreground: 45 20% 35%;
+    --accent: 147 60% 30%;
+    --accent-foreground: 147 60% 95%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 45 50% 82%;
+    --input: 45 50% 87%;
+    --ring: 45 65% 42%;
+  }
+
+  .dark.theme-islamic-yellow {
+    --background: 45 20% 8%;
+    --foreground: 45 50% 90%;
+    --card: 45 20% 12%;
+    --card-foreground: 45 50% 90%;
+    --popover: 45 20% 8%;
+    --popover-foreground: 45 50% 90%;
+    --primary: 45 65% 52%;
+    --primary-foreground: 45 20% 10%;
+    --secondary: 45 20% 15%;
+    --secondary-foreground: 45 50% 90%;
+    --muted: 45 20% 15%;
+    --muted-foreground: 45 50% 60%;
+    --accent: 147 60% 40%;
+    --accent-foreground: 147 60% 95%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 45 20% 15%;
+    --input: 45 20% 15%;
+    --ring: 45 65% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
