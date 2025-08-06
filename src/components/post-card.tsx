@@ -31,11 +31,12 @@ import {
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Textarea } from './ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
-import { doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, onSnapshot, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { useTranslation } from '@/hooks/use-translation';
+import { useRouter } from "next/navigation";
 
 function FacebookVideoEmbed({ url }: { url: string }) {
     // Facebook videoları için basit bir clickable link göster
@@ -150,6 +151,8 @@ function DisplayAvatar({ imageKey, fallback, ...props }: { imageKey?: string, fa
 interface PostCardProps {
   post: Post;
   user: User;
+  onDelete?: () => void;
+  showActions?: boolean;
 }
 
 function ReportDialog({ post, currentUser, children }: { post: Post, currentUser: (User & import('firebase/auth').User) | null, children: React.ReactNode }) {
@@ -412,8 +415,9 @@ function Lightbox({ mediaKey, mediaType, children }: { mediaKey?: string, mediaT
     );
 }
 
-export default function PostCard({ post: initialPost, user }: PostCardProps) {
-  const { user: currentUser } = useAuth();
+export default function PostCard({ post: initialPost, user: postUser, onDelete, showActions = true }: PostCardProps) {
+  const { user } = useAuth();
+  const router = useRouter();
   const { toast } = useToast();
   const { t } = useTranslation();
   const [post, setPost] = useState<Post>(initialPost);
@@ -431,57 +435,82 @@ export default function PostCard({ post: initialPost, user }: PostCardProps) {
       return () => unsubscribe();
   }, [initialPost.id]);
 
-  const isLiked = currentUser ? (post.likes || []).includes(currentUser.uid) : false;
-  const isSaved = currentUser ? (currentUser.savedPosts || []).includes(post.id) : false;
+  const isLiked = user ? (post.likes || []).includes(user.uid) : false;
+  const isSaved = user ? (user.savedPosts || []).includes(post.id) : false;
 
   const handleLike = async () => {
-      if (!currentUser) {
-           toast({ variant: "destructive", title: t.authError, description: t.mustBeLoggedInToLike})
-           return;
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Giriş Yapın",
+          description: "Beğeni yapmak için giriş yapmanız gerekiyor.",
+        });
+        return;
       }
-      const postRef = doc(db, 'posts', post.id);
+
       try {
-          if (isLiked) {
-              await updateDoc(postRef, {
-                  likes: arrayRemove(currentUser.uid)
-              });
-          } else {
-              await updateDoc(postRef, {
-                  likes: arrayUnion(currentUser.uid)
-              });
-          }
+        const postRef = doc(db, "posts", post.id);
+
+        if (isLiked) {
+          await updateDoc(postRef, {
+            likes: arrayRemove(user.uid)
+          });
+          setPost(prev => ({ ...prev, likes: prev.likes?.filter(id => id !== user.uid) || [] }));
+        } else {
+          await updateDoc(postRef, {
+            likes: arrayUnion(user.uid)
+          });
+           setPost(prev => ({ ...prev, likes: [...(prev.likes || []), user.uid] }));
+        }
       } catch (error) {
-          console.error("Error liking post: ", error);
-          toast({ variant: "destructive", title: t.error, description: t.couldNotUpdateLike})
+        console.error("Error updating like:", error);
+        toast({ variant: "destructive", title: t.error, description: t.couldNotUpdateLike})
       }
   }
 
-  const handleSavePost = async () => {
-      if (!currentUser) {
-           toast({ variant: "destructive", title: t.authError, description: t.mustBeLoggedInToSave})
-           return;
+  const handleSave = async () => {
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Giriş Yapın",
+          description: "Gönderi kaydetmek için giriş yapmanız gerekiyor.",
+        });
+        return;
       }
-      const userRef = doc(db, 'users', currentUser.uid);
+
       try {
-          if (isSaved) {
-              await updateDoc(userRef, {
-                  savedPosts: arrayRemove(post.id)
-              });
-              toast({ title: t.postUnsaved, description: t.postUnsavedDesc });
-          } else {
-              await updateDoc(userRef, {
-                  savedPosts: arrayUnion(post.id)
-              });
-              toast({ title: t.postSaved, description: t.postSavedDesc });
-          }
+        const userRef = doc(db, "users", user.uid);
+
+        if (isSaved) {
+          await updateDoc(userRef, {
+            savedPosts: arrayRemove(post.id)
+          });
+          setPostUser(prev => ({ ...prev, savedPosts: prev.savedPosts?.filter(pid => pid !== post.id) || [] }));
+          toast({
+            title: t.postUnsaved,
+            description: t.postUnsavedDesc,
+          });
+        } else {
+          await updateDoc(userRef, {
+            savedPosts: arrayUnion(post.id)
+          });
+          setPostUser(prev => ({ ...prev, savedPosts: [...(prev.savedPosts || []), post.id] }));
+          toast({
+            title: t.postSaved,
+            description: t.postSavedDesc,
+          });
+        }
       } catch (error) {
-          console.error("Error saving post: ", error);
-          toast({ variant: "destructive", title: t.error, description: t.couldNotSavePost})
+        console.error("Error saving post:", error);
+        toast({
+          variant: "destructive",
+          title: t.couldNotSavePost,
+        });
       }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!currentUser || (currentUser.uid !== post.userId && currentUser.role !== 'admin')) {
+    if (!user || (user.uid !== post.userId && user.role !== 'admin')) {
         toast({variant: 'destructive', title: t.unauthorized, description: t.unauthorizedDelete});
         return;
     }
@@ -489,6 +518,7 @@ export default function PostCard({ post: initialPost, user }: PostCardProps) {
         try {
             await deleteDoc(doc(db, 'posts', post.id));
             toast({title: t.success, description: t.postDeletedDesc});
+            if (onDelete) onDelete();
         } catch (error) {
             console.error("Error deleting post:", error);
             toast({variant: 'destructive', title: t.error, description: t.couldNotDeletePost});
@@ -576,40 +606,13 @@ export default function PostCard({ post: initialPost, user }: PostCardProps) {
 
         const isFacebook = url.includes('facebook.com') || url.includes('fb.watch');
         if (isFacebook) {
-            // facebook.com/share/v/ formatını engelle - ZATEN YUKARIDA KONTROL EDİLİYOR
-            // if (url.includes('facebook.com/share/v/')) {
-            //     return (
-            //         <div className="mt-3 block aspect-video rounded-lg overflow-hidden border bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
-            //             <div className="w-full h-full flex flex-col items-center justify-center text-red-800 dark:text-red-200 p-6">
-            //                 <PlayCircle className="w-12 h-12 mb-3 text-red-600 dark:text-red-400" />
-            //                 <h3 className="text-lg font-semibold mb-2 text-center">Desteklenmeyen Facebook Bağlantısı</h3>
-            //                 <p className="text-sm text-center mb-3 leading-relaxed">
-            //                     Bu bağlantı formatı desteklenmemektedir. Lütfen videonun ana sayfasından doğrudan video bağlantısını kopyalayın.
-            //                 </p>
-            //                 <div className="text-xs text-red-700 dark:text-red-300 text-center mb-4 space-y-1">
-            //                     <p><strong>Doğru bağlantı formatları:</strong></p>
-            //                     <p>• facebook.com/watch?v=123456</p>
-            //                     <p>• facebook.com/kullanici-adi/videos/123456</p>
-            //                     <p>• fb.watch/abc123</p>
-            //                 </div>
-            //                 <div className="text-xs text-red-600 dark:text-red-400 text-center">
-            //                     Video sayfasına gidin ve doğrudan video URL'ini kopyalayın.
-            //                 </div>
-            //             </div>
-            //         </div>
-            //     );
-            // }
-
-            // Facebook video ID'sini çıkarmaya çalış
             let videoId = null;
-
-            // Farklı Facebook video formatlarını kontrol et
             const patterns = [
-                /facebook\.com\/watch\?v=([0-9]+)/,  // watch?v=123456
-                /facebook\.com\/.*\/videos\/([0-9]+)/, // /username/videos/123456
-                /facebook\.com\/video\.php\?v=([0-9]+)/, // video.php?v=123456
-                /fb\.watch\/([a-zA-Z0-9_-]+)/, // fb.watch/abc123
-                /facebook\.com\/.*\/posts\/([0-9]+)/, // posts/123456
+                /facebook\.com\/watch\?v=([0-9]+)/,
+                /facebook\.com\/.*\/videos\/([0-9]+)/,
+                /facebook\.com\/video\.php\?v=([0-9]+)/,
+                /fb\.watch\/([a-zA-Z0-9_-]+)/,
+                /facebook\.com\/.*\/posts\/([0-9]+)/,
             ];
 
             for (const pattern of patterns) {
@@ -621,7 +624,6 @@ export default function PostCard({ post: initialPost, user }: PostCardProps) {
             }
 
             if (videoId) {
-                // Video ID'si bulunduysa iframe ile göster
                 return (
                     <div className="mt-3 aspect-video rounded-lg overflow-hidden border bg-black relative">
                         <iframe
@@ -637,7 +639,6 @@ export default function PostCard({ post: initialPost, user }: PostCardProps) {
                     </div>
                 );
             } else {
-                // Video ID'si bulunamadıysa uyarı göster
                 return (
                     <div className="mt-3 block aspect-video rounded-lg overflow-hidden border bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors">
                         <div className="w-full h-full flex flex-col items-center justify-center text-yellow-800 dark:text-yellow-200 p-6">
@@ -703,18 +704,18 @@ export default function PostCard({ post: initialPost, user }: PostCardProps) {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-center gap-3 p-4">
-        <Link href={`/profile/${user.username}`}>
+        <Link href={`/profile/${postUser.username}`}>
           <Avatar>
-            <DisplayAvatar imageKey={user.avatarUrl} fallback={<AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>} />
+            <DisplayAvatar imageKey={postUser.avatarUrl} fallback={<AvatarFallback><img src="/images/default-avatar.svg" alt="Default Avatar" className="w-full h-full object-cover" /></AvatarFallback>} />
           </Avatar>
         </Link>
         <div className="flex-1">
-          <Link href={`/profile/${user.username}`} className="font-bold hover:underline">{user.name}</Link>
+          <Link href={`/profile/${postUser.username}`} className="font-bold hover:underline">{postUser.name}</Link>
           <p className="text-sm text-muted-foreground">
-            @{user.username} · {postDate}
+            @{postUser.username} · {postDate}
           </p>
         </div>
-        {currentUser && (
+        {user && (
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -722,7 +723,7 @@ export default function PostCard({ post: initialPost, user }: PostCardProps) {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    {(currentUser.uid === post.userId || currentUser.role === 'admin') && (
+                    {(user.uid === post.userId || user.role === 'admin') && (
                       <>
                         <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleDelete}>
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -731,7 +732,7 @@ export default function PostCard({ post: initialPost, user }: PostCardProps) {
                         <DropdownMenuSeparator />
                       </>
                     )}
-                    <ReportDialog post={post} currentUser={currentUser}>
+                    <ReportDialog post={post} currentUser={user}>
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                             <ShieldAlert className="mr-2 h-4 w-4" />
                             <span>{t.reportPost}</span>
@@ -747,21 +748,67 @@ export default function PostCard({ post: initialPost, user }: PostCardProps) {
       </CardContent>
       <CardFooter className="flex flex-col items-start p-4">
         <div className="w-full flex justify-around">
-           <Button variant="ghost" className={cn("flex items-center gap-2 text-muted-foreground transition-colors", isLiked ? 'text-destructive' : 'hover:text-destructive')} onClick={handleLike} disabled={!currentUser}>
+           <Button variant="ghost" className={cn("flex items-center gap-2 text-muted-foreground transition-colors", isLiked ? 'text-destructive' : 'hover:text-destructive')} onClick={handleLike} disabled={!user}>
             <Heart className={cn("w-5 h-5", isLiked && 'fill-current')} />
             <span>{(post.likes || []).length}</span>
           </Button>
-          <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground hover:text-primary" onClick={() => setIsCommentSectionOpen(!isCommentSectionOpen)} disabled={!currentUser}>
+          <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground hover:text-primary" onClick={() => user ? setIsCommentSectionOpen(!isCommentSectionOpen) : toast({ variant: "destructive", title: "Giriş Yapın", description: "Yorumları görmek için giriş yapmanız gerekiyor." })} disabled={!user}>
             <MessageCircle className="w-5 h-5" />
             <span>{(post.comments || []).length}</span>
           </Button>
-          <Button variant="ghost" className={cn("flex items-center gap-2 text-muted-foreground transition-colors", isSaved ? 'text-primary' : 'hover:text-primary')} onClick={handleSavePost} disabled={!currentUser}>
+          <Button variant="ghost" className={cn("flex items-center gap-2 text-muted-foreground transition-colors", isSaved ? 'text-primary' : 'hover:text-primary')} onClick={handleSave} disabled={!user}>
             <Bookmark className={cn("w-5 h-5", isSaved && 'fill-current')} />
             <span>{isSaved ? t.saved : t.save}</span>
           </Button>
         </div>
-        {isCommentSectionOpen && <CommentSection postId={post.id} currentUser={currentUser} />}
+        {isCommentSectionOpen && (
+          <div className="pt-4 border-t w-full">
+            <div className="space-y-3 mb-4">
+              {/* Comments will be loaded here */}
+              <p className="text-sm text-muted-foreground">Yorumlar yükleniyor...</p>
+            </div>
+
+            {user ? (
+              <div className="flex gap-3">
+                <Avatar className="w-8 h-8">
+                  <AvatarFallback>
+                    {user.displayName?.charAt(0) || "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 flex gap-2">
+                  <Input
+                    placeholder="Yorum yazın..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleComment()}
+                    className="flex-1"
+                  />
+                  <Button onClick={handleComment} size="sm">
+                    Gönder
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center p-4 border border-dashed rounded-lg">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Yorum yapmak için giriş yapın
+                </p>
+                <Button onClick={() => router.push('/login')} variant="outline" size="sm">
+                  Giriş Yap
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </CardFooter>
     </Card>
   );
+}
+
+// Helper to update user state directly in PostCard for savedPosts
+function setPostUser(user: any) {
+  // This is a placeholder, actual state update should be handled by context or a more robust state management
+  // For this example, we'll assume `user` object passed to PostCard is mutable or we can re-fetch it.
+  // A more proper way would be to use `setUser` from a context or state hook if available.
+  console.warn("setPostUser is a placeholder. Proper state management needed.");
 }

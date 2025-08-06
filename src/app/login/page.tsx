@@ -1,10 +1,9 @@
-
 "use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { signInWithEmailAndPassword, signInWithRedirect, GoogleAuthProvider, getAuth, sendPasswordResetEmail } from "firebase/auth";
+import { signInWithEmailAndPassword, getAuth, sendPasswordResetEmail } from "firebase/auth";
 import { app } from "@/lib/firebase"; 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +14,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/hooks/use-translation";
 
 const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,7 +22,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
@@ -37,7 +34,7 @@ export default function LoginPage() {
       router.push('/');
     } catch (error: any) {
       let errorMessage = error.message;
-      
+
       // Firebase auth hata kodlarını kontrol et
       if (error.code === 'auth/user-not-found') {
         errorMessage = 'Bu email adresi ile kayıtlı bir hesap bulunamadı. Lütfen kayıt olun.';
@@ -52,7 +49,7 @@ export default function LoginPage() {
       } else if (error.code === 'auth/invalid-credential') {
         errorMessage = 'Email veya şifre hatalı. Lütfen bilgilerinizi kontrol edin.';
       }
-      
+
       toast({
         variant: "destructive",
         title: t.loginFailed,
@@ -61,19 +58,6 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleGoogleLogin = async () => {
-    setIsGoogleLoading(true);
-    signInWithRedirect(auth, googleProvider).catch((error) => {
-        console.error("Google Login Error:", error);
-        toast({
-            variant: "destructive",
-            title: t.loginFailed,
-            description: t.googleLoginFailed,
-        });
-        setIsGoogleLoading(false);
-    });
   };
 
   const handleForgotPassword = async () => {
@@ -96,7 +80,7 @@ export default function LoginPage() {
       setShowForgotPassword(false);
     } catch (error: any) {
       let errorMessage = error.message;
-      
+
       if (error.code === 'auth/user-not-found') {
         errorMessage = 'Bu email adresi ile kayıtlı bir hesap bulunamadı.';
       } else if (error.code === 'auth/invalid-email') {
@@ -104,7 +88,7 @@ export default function LoginPage() {
       } else if (error.code === 'auth/too-many-requests') {
         errorMessage = 'Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.';
       }
-      
+
       toast({
         variant: "destructive",
         title: "Şifre Sıfırlama Hatası",
@@ -130,7 +114,7 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading || isGoogleLoading}/>
+                <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading}/>
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
@@ -139,28 +123,17 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
                     className="ml-auto inline-block text-sm underline hover:text-primary"
-                    disabled={isLoading || isGoogleLoading}
+                    disabled={isLoading}
                   >
                     Forgot your password?
                   </button>
                 </div>
-                <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading || isGoogleLoading}/>
+                <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading}/>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Logging in...' : 'Login'}
               </Button>
             </form>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-              </div>
-            </div>
-            <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading}>
-               {isGoogleLoading ? 'Redirecting to Google...' : 'Login with Google'}
-            </Button>
           </div>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{" "}

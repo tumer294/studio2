@@ -8,12 +8,13 @@ import AppSidebar from "@/components/app-sidebar";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileHeader from "@/components/mobile-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getRedirectResult } from "firebase/auth";
+import { getRedirectResult, User as FirebaseUser } from 'firebase/auth';
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, orderBy, limit, getDocs, updateDoc } from "firebase/firestore";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { User } from '@/lib/types';
 import { useTranslation } from "@/hooks/use-translation";
+import { UmmahConnectLogo } from "@/components/icons";
 import { useState, useEffect } from "react";
 import { onSnapshot } from "firebase/firestore";
 import type { Post } from "@/lib/types";
@@ -58,12 +59,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
 
   React.useEffect(() => {
-    // This effect only handles redirecting away if the user is NOT authenticated *after* loading is complete.
-    // It avoids the race condition of redirecting before the auth state is fully resolved.
+    // Allow anonymous users to view home page only
+    // Redirect to login only if trying to access restricted pages
     if (!loading && !user) {
-      router.replace('/login');
+      const currentPath = window.location.pathname;
+      const allowedPaths = ['/'];
+      
+      if (!allowedPaths.includes(currentPath)) {
+        router.replace('/login');
+      }
     }
   }, [user, loading, router]);
+
+  React.useEffect(() => {
+    if (user) {
+      setShowWelcomeDialog(true);
+    }
+  }, [user]);
 
   React.useEffect(() => {
     const handleRedirectResult = async () => {
@@ -86,32 +98,36 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         username: username,
                         email: firebaseUser.email,
                         bio: t.welcomeToUmmahConnect,
-                        avatarUrl: '', // Let's keep this as an R2 key, so empty string is fine.
+                        avatarUrl: '',
                         coverPhotoUrl: '',
                         followers: [],
                         following: [],
                         createdAt: serverTimestamp(),
-                        role: 'user',
+                        role: firebaseUser.email === 'admin@example.com' ? 'admin' : 'user',
                         theme: 'light',
                         language: language,
-                        welcomeShown: false // Initialize welcomeShown to false
+                        welcomeShown: false
                     });
-                    // Set showWelcomeDialog to true for the new user
                     setShowWelcomeDialog(true);
+                    console.log('New user created successfully:', firebaseUser.email);
                 } else {
-                    // If user exists, check if welcome message has been shown
                     const userData = userDoc.data();
                     if (!userData.welcomeShown) {
                         setShowWelcomeDialog(true);
                     }
+                    console.log('Existing user logged in:', firebaseUser.email);
                 }
             }
         } catch (error) {
             console.error("Error handling redirect result:", error);
         }
     };
-    handleRedirectResult();
-  }, [t, language]);
+
+    // Only run this effect once on mount
+    if (typeof window !== 'undefined') {
+        handleRedirectResult();
+    }
+  }, [t.welcomeToUmmahConnect, language]);
 
   // Fetch sidebar data with real-time updates
   React.useEffect(() => {
@@ -214,10 +230,69 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // While authentication is in progress, always display a loading skeleton.
-  // This is the key to preventing the "flicker" or "redirect loop".
-  if (loading || !user) {
+  // Show loading skeleton only during auth check
+  if (loading) {
     return <AppLoadingSkeleton />;
+  }
+
+  // For anonymous users, show limited interface
+  if (!user) {
+    return (
+      <div className="flex bg-background">
+        {isMobile ? (
+          <div className="flex flex-col w-full">
+            <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
+              <div className="flex h-14 items-center px-4">
+                <div className="flex items-center gap-2">
+                  <UmmahConnectLogo className="h-8 w-8" />
+                  <span className="font-bold text-lg">UmmahConnect</span>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                  <button 
+                    onClick={() => router.push('/login')} 
+                    className="text-sm px-3 py-1 bg-primary text-primary-foreground rounded-md"
+                  >
+                    Giriş Yap
+                  </button>
+                </div>
+              </div>
+            </div>
+            <main className="flex-1">{children}</main>
+          </div>
+        ) : (
+          <>
+            <div className="sticky top-0 h-screen w-64 xl:w-72 flex-shrink-0 border-r border-border/60">
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-8">
+                  <UmmahConnectLogo className="h-8 w-8" />
+                  <span className="font-bold text-lg">UmmahConnect</span>
+                </div>
+                <div className="space-y-4">
+                  <div className="text-center p-4 border rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Tüm özellikleri kullanmak için kayıt olun
+                    </p>
+                    <button 
+                      onClick={() => router.push('/signup')} 
+                      className="w-full mb-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm"
+                    >
+                      Kayıt Ol
+                    </button>
+                    <button 
+                      onClick={() => router.push('/login')} 
+                      className="w-full px-4 py-2 border border-border rounded-md text-sm"
+                    >
+                      Giriş Yap
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <main className="flex-1 max-w-2xl mx-auto py-8 px-6 lg:max-w-xl xl:max-w-2xl 2xl:max-w-3xl xl:px-8">{children}</main>
+          </>
+        )}
+      </div>
+    );
   }
 
   // If loading is done and we have a user, render the app.

@@ -109,14 +109,14 @@ export default function AppSidebar({
     { href: "/", label: t.home, icon: Home },
     { href: "/explore", label: t.explore, icon: Compass },
     { href: "/notifications", label: t.notifications, icon: Bell },
-    { href: "/profile/me", label: t.profile, icon: User },
+    { href: "/profile", label: t.profile, icon: User },
   ];
 
   if(isAdmin) {
     navItems.push({ href: "/admin", label: "Admin Panel", icon: Shield });
   }
 
-  
+
 
 
   const handleLogout = async () => {

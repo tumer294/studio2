@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, onSnapshot, updateDoc, arrayUnion, arrayRemove, orderBy, documentId } from 'firebase/firestore';
@@ -12,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PostCard from "@/components/post-card";
-import { UserPlus, Mail, Camera, UserCheck, Loader2 } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from '@/hooks/use-translation';
@@ -52,97 +53,38 @@ function ProfileSkeleton() {
     )
 }
 
-
-export default function ProfilePage() {
+export default function PersonalProfilePage() {
   const { user: currentUser, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
   const router = useRouter();
-  const params = useParams();
-  const usernameFromUrl = Array.isArray(params.username) ? params.username[0] : params.username;
 
-  const [profileUser, setProfileUser] = useState<User | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [savedPostsWithUsers, setSavedPostsWithUsers] = useState<PostWithUser[]>([]);
   const [userReplies, setUserReplies] = useState<PostWithUser[]>([]);
   const [likedPosts, setLikedPosts] = useState<PostWithUser[]>([]);
+  const [followingUsers, setFollowingUsers] = useState<User[]>([]);
+  const [followerUsers, setFollowerUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState< 'avatar' | 'cover' | null >(null);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [isUpdatingFollow, setIsUpdatingFollow] = useState(false);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
+  // Giriş yapmamışsa login sayfasına yönlendir
   useEffect(() => {
-    let unsubProfile: (() => void) | undefined;
-
-    const fetchProfile = async (username: string) => {
-        setLoading(true);
-        const usersRef = collection(db, "users");
-        const q = query(usersRef, where("username", "==", username));
-
-        try {
-            const userQuerySnapshot = await getDocs(q);
-
-            if (userQuerySnapshot.empty) {
-                setProfileUser(null);
-                setLoading(false);
-                return;
-            }
-
-            const userDoc = userQuerySnapshot.docs[0];
-
-            unsubProfile = onSnapshot(userDoc.ref, (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                    const userData = { id: docSnapshot.id, ...docSnapshot.data() } as User;
-                    setProfileUser(userData);
-                    // Check if current user is following this profile
-                    if (currentUser && userData.followers) {
-                      setIsFollowing(userData.followers.includes(currentUser.uid));
-                    }
-                } else {
-                    setProfileUser(null);
-                }
-            });
-
-        } catch (error) {
-            toast({ variant: 'destructive', title: t.error, description: t.couldNotFetchProfile });
-            setProfileUser(null);
-            setLoading(false);
-        }
-    };
-
-    if (authLoading) return;
-
-    if (!usernameFromUrl) {
-      setLoading(false);
-      return;
+    if (!authLoading && !currentUser) {
+      router.push('/login');
     }
+  }, [currentUser, authLoading, router]);
 
-    if (usernameFromUrl === 'me') {
-        if (currentUser?.username) {
-            router.replace(`/profile/${currentUser.username}`);
-        } else if (!authLoading) {
-             setLoading(false);
-        }
-    } else {
-        fetchProfile(usernameFromUrl);
-    }
-
-    return () => {
-      if (unsubProfile) unsubProfile();
-    };
-  }, [usernameFromUrl, currentUser?.username, authLoading, router, toast, t, currentUser]);
-
- useEffect(() => {
-    if (!profileUser?.uid) {
-      if (!loading) setLoading(false);
+  useEffect(() => {
+    if (!currentUser?.uid) {
       return;
     }
 
     const postsRef = collection(db, 'posts');
-    const postsQuery = query(postsRef, where('userId', '==', profileUser.uid));
+    const postsQuery = query(postsRef, where('userId', '==', currentUser.uid));
 
     const unsubPosts = onSnapshot(
       postsQuery,
@@ -150,10 +92,6 @@ export default function ProfilePage() {
         let postsData = postsSnapshot.docs.map(
           (doc) => ({ id: doc.id, ...doc.data() }) as Post
         );
-
-        if (currentUser?.role !== 'admin' && currentUser?.uid !== profileUser.uid) {
-          postsData = postsData.filter((p) => p.status !== 'banned');
-        }
 
         postsData.sort((a,b) => b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime());
         setUserPosts(postsData);
@@ -170,17 +108,16 @@ export default function ProfilePage() {
     );
 
     return () => unsubPosts();
-  }, [profileUser?.uid, currentUser, toast, t]);
-
+  }, [currentUser?.uid, toast, t]);
 
   useEffect(() => {
-    if (!profileUser || !currentUser || profileUser.uid !== currentUser.uid || !profileUser.savedPosts || profileUser.savedPosts.length === 0) {
+    if (!currentUser || !currentUser.savedPosts || currentUser.savedPosts.length === 0) {
         setSavedPostsWithUsers([]);
         return;
     }
 
     const fetchSavedPosts = async () => {
-        const savedPostsIds = [...profileUser.savedPosts].reverse(); 
+        const savedPostsIds = [...currentUser.savedPosts].reverse(); 
         if (savedPostsIds.length === 0) return;
 
         try {
@@ -231,11 +168,11 @@ export default function ProfilePage() {
 
     fetchSavedPosts();
 
-  }, [profileUser, currentUser, toast, t]);
+  }, [currentUser, toast, t]);
 
   // Fetch user's replies (posts where user has commented)
   useEffect(() => {
-    if (!profileUser?.uid || !currentUser) {
+    if (!currentUser?.uid) {
       setUserReplies([]);
       return;
     }
@@ -247,10 +184,10 @@ export default function ProfilePage() {
 
         const unsubReplies = onSnapshot(postsQuery, async (postsSnapshot) => {
           const allPosts = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Post);
-
+          
           // Filter posts where user has commented
           const postsWithUserComments = allPosts.filter(post => 
-            post.comments && post.comments.some(comment => comment.userId === profileUser.uid)
+            post.comments && post.comments.some(comment => comment.userId === currentUser.uid)
           );
 
           if (postsWithUserComments.length === 0) {
@@ -294,11 +231,11 @@ export default function ProfilePage() {
     };
 
     fetchUserReplies();
-  }, [profileUser?.uid, currentUser]);
+  }, [currentUser?.uid]);
 
   // Fetch liked posts
   useEffect(() => {
-    if (!profileUser?.uid || !currentUser) {
+    if (!currentUser?.uid) {
       setLikedPosts([]);
       return;
     }
@@ -310,10 +247,10 @@ export default function ProfilePage() {
 
         const unsubLikes = onSnapshot(postsQuery, async (postsSnapshot) => {
           const allPosts = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Post);
-
+          
           // Filter posts that user has liked
           const likedPostsData = allPosts.filter(post => 
-            post.likes && post.likes.includes(profileUser.uid)
+            post.likes && post.likes.includes(currentUser.uid)
           );
 
           if (likedPostsData.length === 0) {
@@ -357,66 +294,84 @@ export default function ProfilePage() {
     };
 
     fetchLikedPosts();
-  }, [profileUser?.uid, currentUser]);
+  }, [currentUser?.uid]);
 
-  const handleFollowToggle = async () => {
-    if (!currentUser || !profileUser || isUpdatingFollow) return;
-
-    setIsUpdatingFollow(true);
-    try {
-      const profileUserRef = doc(db, 'users', profileUser.id);
-      const currentUserRef = doc(db, 'users', currentUser.uid);
-
-      if (isFollowing) {
-        // Unfollow
-        await updateDoc(profileUserRef, {
-          followers: arrayRemove(currentUser.uid)
-        });
-        await updateDoc(currentUserRef, {
-          following: arrayRemove(profileUser.uid)
-        });
-        setIsFollowing(false);
-        toast({
-          title: t.success,
-          description: `${profileUser.name} takipten çıkarıldı`
-        });
-      } else {
-        // Follow
-        await updateDoc(profileUserRef, {
-          followers: arrayUnion(currentUser.uid)
-        });
-        await updateDoc(currentUserRef, {
-          following: arrayUnion(profileUser.uid)
-        });
-        setIsFollowing(true);
-        toast({
-          title: t.success,
-          description: `${profileUser.name} takip ediliyor`
-        });
-      }
-
-      // Update local state
-      setProfileUser(prev => prev ? {
-        ...prev,
-        followers: isFollowing 
-          ? prev.followers?.filter(id => id !== currentUser.uid) || []
-          : [...(prev.followers || []), currentUser.uid]
-      } : null);
-
-    } catch (error) {
-      console.error('Error updating follow status:', error);
-      toast({
-        variant: 'destructive',
-        title: t.error,
-        description: 'Takip durumu güncellenirken hata oluştu'
-      });
-    } finally {
-      setIsUpdatingFollow(false);
+  // Fetch following users
+  useEffect(() => {
+    if (!currentUser?.following || currentUser.following.length === 0) {
+      setFollowingUsers([]);
+      return;
     }
-  }
+
+    const fetchFollowing = async () => {
+      try {
+        const followingIds = currentUser.following;
+        const userPromises = [];
+        
+        for (let i = 0; i < followingIds.length; i += 30) {
+          const batchIds = followingIds.slice(i, i + 30);
+          const usersRef = collection(db, 'users');
+          const usersQuery = query(usersRef, where('uid', 'in', batchIds));
+          userPromises.push(getDocs(usersQuery));
+        }
+
+        const userSnapshots = await Promise.all(userPromises);
+        const users: User[] = [];
+        userSnapshots.forEach(snapshot => 
+          snapshot.forEach(doc => {
+            const userData = { id: doc.id, ...doc.data() } as User;
+            users.push(userData);
+          })
+        );
+
+        setFollowingUsers(users);
+      } catch (error) {
+        console.error('Error fetching following:', error);
+      }
+    };
+
+    fetchFollowing();
+  }, [currentUser?.following]);
+
+  // Fetch followers
+  useEffect(() => {
+    if (!currentUser?.followers || currentUser.followers.length === 0) {
+      setFollowerUsers([]);
+      return;
+    }
+
+    const fetchFollowers = async () => {
+      try {
+        const followerIds = currentUser.followers;
+        const userPromises = [];
+        
+        for (let i = 0; i < followerIds.length; i += 30) {
+          const batchIds = followerIds.slice(i, i + 30);
+          const usersRef = collection(db, 'users');
+          const usersQuery = query(usersRef, where('uid', 'in', batchIds));
+          userPromises.push(getDocs(usersQuery));
+        }
+
+        const userSnapshots = await Promise.all(userPromises);
+        const users: User[] = [];
+        userSnapshots.forEach(snapshot => 
+          snapshot.forEach(doc => {
+            const userData = { id: doc.id, ...doc.data() } as User;
+            users.push(userData);
+          })
+        );
+
+        setFollowerUsers(users);
+      } catch (error) {
+        console.error('Error fetching followers:', error);
+      }
+    };
+
+    fetchFollowers();
+  }, [currentUser?.followers]);
 
  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
-    if (!e.target.files || e.target.files.length === 0 || !profileUser || !currentUser) return;
+    if (!e.target.files || e.target.files.length === 0 || !currentUser) return;
     const file = e.target.files[0];
 
     setIsUploading(type);
@@ -439,12 +394,12 @@ export default function ProfilePage() {
 
       const { key } = result;
 
-      const userDocRef = doc(db, "users", profileUser.uid);
+      const userDocRef = doc(db, "users", currentUser.uid);
       const updateData = type === 'avatar' ? { avatarUrl: key } : { coverPhotoUrl: key };
       await updateDoc(userDocRef, updateData);
 
       // Eski cache'i temizle ve yeni resmi cache'e ekle
-      const oldImageKey = type === 'avatar' ? profileUser.avatarUrl : profileUser.coverPhotoUrl;
+      const oldImageKey = type === 'avatar' ? currentUser.avatarUrl : currentUser.coverPhotoUrl;
       if (oldImageKey) {
         const oldCacheKey = `media_cache_${oldImageKey}`;
         localStorage.removeItem(oldCacheKey);
@@ -481,73 +436,52 @@ export default function ProfilePage() {
     }
   };
 
-
-  if (loading || authLoading || !profileUser) {
+  if (loading || authLoading || !currentUser) {
       return <ProfileSkeleton />;
   }
-
-  const isOwnProfile = currentUser?.uid === profileUser.uid;
 
   return (
     <div>
         <Card className="overflow-hidden">
             <div className="h-32 md:h-48 bg-gradient-to-r from-primary/20 to-accent/20 relative group">
-                <DisplayImage imageKey={profileUser.coverPhotoUrl} alt="Cover photo" fill={true} style={{objectFit:"cover"}} />
-                {isOwnProfile && (
-                  <>
-                    <input type="file" accept="image/*" ref={coverInputRef} onChange={(e) => handleImageUpload(e, 'cover')} className="hidden" />
-                    <Button size="sm" variant="outline" className="absolute bottom-2 right-2 bg-background/50 backdrop-blur-sm" onClick={() => coverInputRef.current?.click()} disabled={!!isUploading}>
-                        {isUploading === 'cover' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />} 
-                        {isUploading === 'cover' ? 'Uploading...' : 'Cover Photo'}
-                    </Button>
-                  </>
-                )}
+                <DisplayImage imageKey={currentUser.coverPhotoUrl} alt="Cover photo" fill={true} style={{objectFit:"cover"}} />
+                <>
+                  <input type="file" accept="image/*" ref={coverInputRef} onChange={(e) => handleImageUpload(e, 'cover')} className="hidden" />
+                  <Button size="sm" variant="outline" className="absolute bottom-2 right-2 bg-background/50 backdrop-blur-sm" onClick={() => coverInputRef.current?.click()} disabled={!!isUploading}>
+                      {isUploading === 'cover' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />} 
+                      {isUploading === 'cover' ? 'Yükleniyor...' : 'Kapak Fotoğrafı'}
+                  </Button>
+                </>
             </div>
             <div className="p-4 relative">
                  <div className="absolute -top-12 md:-top-16 left-4 md:left-6 group">
                     <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-card shadow-md">
-                        <DisplayImage imageKey={profileUser.avatarUrl} alt={profileUser.name} className="w-full h-full object-cover" width={128} height={128} />
-                        <AvatarFallback className="text-4xl">{profileUser.name.charAt(0)}</AvatarFallback>
+                        <DisplayImage imageKey={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" width={128} height={128} />
+                        <AvatarFallback className="text-4xl">{currentUser.name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                     {isOwnProfile && (
-                       <>
-                         <input type="file" accept="image/*" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} className="hidden" />
-                         <div 
-                           className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                           onClick={() => avatarInputRef.current?.click()}>
-                           {isUploading === 'avatar' ? <Loader2 className="text-white w-8 h-8 animate-spin" /> : <Camera className="text-white w-8 h-8"/>}
-                         </div>
-                       </>
-                     )}
-                </div>
-
-                <div className="flex justify-end items-center mb-4 min-h-[40px]">
-                   {!isOwnProfile && currentUser && (
-                     <div className="flex gap-2">
-                       <Button onClick={handleFollowToggle} disabled={!currentUser || isUpdatingFollow}>
-                          {isFollowing ? <UserCheck className="mr-2 h-4 w-4" /> : <UserPlus className="mr-2 h-4 w-4" />}
-                          {isUpdatingFollow ? '...' : (isFollowing ? t.following : t.follow)}
-                       </Button>
-                       <Button variant="outline">
-                          <Mail className="mr-2 h-4 w-4"/> {t.message}
-                       </Button>
-                     </div>
-                   )}
+                     <>
+                       <input type="file" accept="image/*" ref={avatarInputRef} onChange={(e) => handleImageUpload(e, 'avatar')} className="hidden" />
+                       <div 
+                         className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                         onClick={() => avatarInputRef.current?.click()}>
+                         {isUploading === 'avatar' ? <Loader2 className="text-white w-8 h-8 animate-spin" /> : <Camera className="text-white w-8 h-8"/>}
+                       </div>
+                     </>
                 </div>
 
                 <div className="pt-8 md:pt-12">
-                    <h2 className="text-2xl font-bold font-headline">{profileUser.name}</h2>
-                    <p className="text-muted-foreground">@{profileUser.username}</p>
-                    <p className="mt-2 text-foreground/90">{profileUser.bio}</p>
+                    <h2 className="text-2xl font-bold font-headline">{currentUser.name}</h2>
+                    <p className="text-muted-foreground">@{currentUser.username}</p>
+                    <p className="mt-2 text-foreground/90">{currentUser.bio}</p>
                 </div>
 
                 <div className="flex gap-6 mt-4 text-sm">
                     <div>
-                        <span className="font-bold">{(profileUser.following || []).length}</span>
+                        <span className="font-bold">{(currentUser.following || []).length}</span>
                         <span className="text-muted-foreground"> {t.following}</span>
                     </div>
                     <div>
-                        <span className="font-bold">{(profileUser.followers || []).length}</span>
+                        <span className="font-bold">{(currentUser.followers || []).length}</span>
                         <span className="text-muted-foreground"> {t.followers}</span>
                     </div>
                 </div>
@@ -555,16 +489,18 @@ export default function ProfilePage() {
         </Card>
 
         <Tabs defaultValue="posts" className="w-full mt-6">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+            <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="posts">{t.posts}</TabsTrigger>
                 <TabsTrigger value="replies">{t.replies}</TabsTrigger>
                 <TabsTrigger value="likes">{t.likes}</TabsTrigger>
                 <TabsTrigger value="saved">{t.saved}</TabsTrigger>
+                <TabsTrigger value="following">{t.following}</TabsTrigger>
+                <TabsTrigger value="followers">{t.followers}</TabsTrigger>
             </TabsList>
             <TabsContent value="posts" className="mt-4 space-y-4">
                 {userPosts.length > 0 ? (
                   userPosts.map(post => (
-                    <PostCard key={post.id} post={post} user={profileUser} />
+                    <PostCard key={post.id} post={post} user={currentUser} />
                   ))
                 ) : (
                     <div className="text-center py-12 text-muted-foreground rounded-lg border">
@@ -577,54 +513,106 @@ export default function ProfilePage() {
                   userReplies.map(postWithUser => (
                     <div key={postWithUser.id} className="relative">
                       <div className="absolute left-4 top-4 text-xs text-muted-foreground bg-secondary px-2 py-1 rounded z-10">
-                        {profileUser?.name} yanıtladı
+                        Yanıtladınız
                       </div>
                       <PostCard post={postWithUser} user={postWithUser.author} />
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-12 text-muted-foreground rounded-lg border">
-                    <p>{isOwnProfile ? t.youHaventRepliedYet : `${profileUser?.name} henüz yanıt vermedi`}</p>
+                    <p>{t.youHaventRepliedYet}</p>
                   </div>
                 )}
             </TabsContent>
             <TabsContent value="likes" className="mt-4 space-y-4">
-                {isOwnProfile ? (
-                  likedPosts.length > 0 ? (
-                    likedPosts.map(postWithUser => (
-                      <div key={postWithUser.id} className="relative">
-                        <div className="absolute left-4 top-4 text-xs text-muted-foreground bg-secondary px-2 py-1 rounded z-10">
-                          Beğendin
-                        </div>
-                        <PostCard post={postWithUser} user={postWithUser.author} />
+                {likedPosts.length > 0 ? (
+                  likedPosts.map(postWithUser => (
+                    <div key={postWithUser.id} className="relative">
+                      <div className="absolute left-4 top-4 text-xs text-muted-foreground bg-secondary px-2 py-1 rounded z-10">
+                        Beğendiniz
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-12 text-muted-foreground rounded-lg border">
-                      <p>{t.youHaventLikedYet}</p>
+                      <PostCard post={postWithUser} user={postWithUser.author} />
                     </div>
-                  )
+                  ))
                 ) : (
                   <div className="text-center py-12 text-muted-foreground rounded-lg border">
-                    <p>Beğenilen gönderiler gizlidir</p>
+                    <p>{t.youHaventLikedYet}</p>
                   </div>
                 )}
             </TabsContent>
             <TabsContent value="saved" className="mt-4 space-y-4">
-                {isOwnProfile ? (
-                    savedPostsWithUsers.length > 0 ? (
-                        savedPostsWithUsers.map(postWithUser => (
-                            <PostCard key={postWithUser.id} post={postWithUser} user={postWithUser.author} />
-                        ))
-                    ) : (
-                        <div className="text-center py-12 text-muted-foreground rounded-lg border">
-                            <p>{t.youHaventSavedPosts}</p>
-                        </div>
-                    )
+                {savedPostsWithUsers.length > 0 ? (
+                    savedPostsWithUsers.map(postWithUser => (
+                        <PostCard key={postWithUser.id} post={postWithUser} user={postWithUser.author} />
+                    ))
                 ) : (
                     <div className="text-center py-12 text-muted-foreground rounded-lg border">
-                        <p>{t.savedPostsArePrivate}</p>
+                        <p>{t.youHaventSavedPosts}</p>
                     </div>
+                )}
+            </TabsContent>
+            <TabsContent value="following" className="mt-4 space-y-4">
+                {followingUsers.length > 0 ? (
+                  followingUsers.map(user => (
+                    <Card key={user.id} className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Avatar>
+                            <DisplayImage imageKey={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" width={40} height={40} />
+                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold">{user.name}</p>
+                            <p className="text-sm text-muted-foreground">@{user.username}</p>
+                            {user.bio && <p className="text-sm text-muted-foreground mt-1">{user.bio}</p>}
+                          </div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.location.href = `/profile/${user.username}`}
+                        >
+                          Profili Gör
+                        </Button>
+                      </div>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground rounded-lg border">
+                    <p>Henüz kimseyi takip etmiyorsunuz</p>
+                  </div>
+                )}
+            </TabsContent>
+            <TabsContent value="followers" className="mt-4 space-y-4">
+                {followerUsers.length > 0 ? (
+                  followerUsers.map(user => (
+                    <Card key={user.id} className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Avatar>
+                            <DisplayImage imageKey={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" width={40} height={40} />
+                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold">{user.name}</p>
+                            <p className="text-sm text-muted-foreground">@{user.username}</p>
+                            {user.bio && <p className="text-sm text-muted-foreground mt-1">{user.bio}</p>}
+                          </div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.location.href = `/profile/${user.username}`}
+                        >
+                          Profili Gör
+                        </Button>
+                      </div>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground rounded-lg border">
+                    <p>Henüz takipçiniz yok</p>
+                  </div>
                 )}
             </TabsContent>
         </Tabs>

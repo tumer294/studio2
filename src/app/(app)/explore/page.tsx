@@ -1,18 +1,20 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, onSnapshot, doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Post, User } from "@/lib/types";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Heart, MessageCircle, Search, TrendingUp, Clock, Image } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { useTranslation } from "@/hooks/use-translation";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from '@/hooks/use-auth';
+import { db } from '@/lib/firebase';
+import { collection, query, orderBy, onSnapshot, getDocs, where, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import type { User, Post } from '@/lib/types';
 import PostCard from "@/components/post-card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from '@/components/ui/skeleton';
+import { Search, TrendingUp, Loader2 } from "lucide-react";
+import { useTranslation } from '@/hooks/use-translation';
+import { useToast } from '@/hooks/use-toast';
+import { DisplayImage } from '@/components/display-image';
 
 function ExploreSkeleton() {
     return (
@@ -29,9 +31,9 @@ function ExploreSkeleton() {
     );
 }
 
-function PostList({ title, posts, users, icon: Icon }: { 
-    title: string, 
-    posts: Post[], 
+function PostList({ title, posts, users, icon: Icon }: {
+    title: string,
+    posts: Post[],
     users: Record<string, User>,
     icon: React.ElementType
 }) {
@@ -75,6 +77,10 @@ function PostList({ title, posts, users, icon: Icon }: {
 }
 
 export default function ExplorePage() {
+    const { user } = useAuth();
+    const { t } = useTranslation();
+    const { toast } = useToast();
+
     const [mostLikedPosts, setMostLikedPosts] = useState<Post[]>([]);
     const [mostCommentedPosts, setMostCommentedPosts] = useState<Post[]>([]);
     const [recentPosts, setRecentPosts] = useState<Post[]>([]);
@@ -82,9 +88,10 @@ export default function ExplorePage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
     const [allPosts, setAllPosts] = useState<Post[]>([]);
-    const [users, setUsers] = useState<Record<string, User>>({});
+    const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    const { t } = useTranslation();
+    const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
+    const [updatingFollow, setUpdatingFollow] = useState<Set<string>>(new Set());
 
     const fetchUsers = async (userIds: string[]) => {
         const newUserIds = userIds.filter(id => !users[id]);
@@ -133,7 +140,7 @@ export default function ExplorePage() {
 
             // Trend (son 7 günde en çok etkileşim alan)
             const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-            const recentInteractions = validPosts.filter(p => 
+            const recentInteractions = validPosts.filter(p =>
                 (p.createdAt?.seconds || 0) * 1000 > sevenDaysAgo
             );
             const sortedByTrending = [...recentInteractions].sort((a, b) => {
@@ -146,7 +153,7 @@ export default function ExplorePage() {
             // Kullanıcı bilgilerini çek
             const userIds = validPosts.map(p => p.userId);
             await fetchUsers(userIds);
-            
+
             setLoading(false);
         }, (error) => {
             console.error("Error fetching posts for explore page: ", error);
@@ -158,9 +165,9 @@ export default function ExplorePage() {
 
     useEffect(() => {
         if (searchQuery.trim()) {
-            const filtered = allPosts.filter(post => 
+            const filtered = allPosts.filter(post =>
                 post.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                users[post.userId]?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+                users.find(u => u.id === post.userId)?.name?.toLowerCase().includes(searchQuery.toLowerCase())
             );
             setFilteredPosts(filtered.slice(0, 12));
         } else {
@@ -168,9 +175,97 @@ export default function ExplorePage() {
         }
     }, [searchQuery, allPosts, users]);
 
+    // Fetch users
+    useEffect(() => {
+        const usersRef = collection(db, 'users');
+        const usersQuery = query(usersRef, orderBy('createdAt', 'desc'));
+
+        const unsubscribe = onSnapshot(
+          usersQuery,
+          (usersSnapshot) => {
+            const usersData = usersSnapshot.docs.map(
+              (doc) => ({ id: doc.id, ...doc.data() }) as User
+            );
+            setUsers(usersData);
+
+            // Update following status
+            if (user?.following) {
+              setFollowingUsers(new Set(user.following));
+            }
+
+            setLoading(false);
+          },
+          (error) => {
+            console.error('Error fetching users:', error);
+            setLoading(false);
+          }
+        );
+
+        return () => unsubscribe();
+      }, [user?.following]);
+
+      const handleFollowToggle = async (targetUser: User) => {
+        if (!user || updatingFollow.has(targetUser.uid)) return;
+
+        const isFollowing = followingUsers.has(targetUser.uid);
+        setUpdatingFollow(prev => new Set(prev).add(targetUser.uid));
+
+        try {
+          const targetUserRef = doc(db, 'users', targetUser.id);
+          const currentUserRef = doc(db, 'users', user.uid);
+
+          if (isFollowing) {
+            // Unfollow
+            await updateDoc(targetUserRef, {
+              followers: arrayRemove(user.uid)
+            });
+            await updateDoc(currentUserRef, {
+              following: arrayRemove(targetUser.uid)
+            });
+            setFollowingUsers(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(targetUser.uid);
+              return newSet;
+            });
+            toast({
+              title: t.success,
+              description: `${targetUser.name} takipten çıkarıldı`
+            });
+          } else {
+            // Follow
+            await updateDoc(targetUserRef, {
+              followers: arrayUnion(user.uid)
+            });
+            await updateDoc(currentUserRef, {
+              following: arrayUnion(targetUser.uid)
+            });
+            setFollowingUsers(prev => new Set(prev).add(targetUser.uid));
+            toast({
+              title: t.success,
+              description: `${targetUser.name} takip ediliyor`
+            });
+          }
+        } catch (error) {
+          console.error('Error updating follow status:', error);
+          toast({
+            variant: 'destructive',
+            title: t.error,
+            description: 'Takip durumu güncellenirken hata oluştu'
+          });
+        } finally {
+          setUpdatingFollow(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(targetUser.uid);
+            return newSet;
+          });
+        }
+      };
+
     if (loading) {
         return <ExploreSkeleton />;
     }
+
+    const filteredUsers = users.filter(u => u.id !== user?.uid);
 
     return (
         <div className="p-4 md:p-0">
@@ -178,7 +273,7 @@ export default function ExplorePage() {
                 <CardHeader>
                     <CardTitle className="font-headline text-2xl md:text-3xl">{t.explore}</CardTitle>
                     <p className="text-muted-foreground">{t.exploreDescription}</p>
-                    
+
                     {/* Arama Çubuğu */}
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -201,7 +296,7 @@ export default function ExplorePage() {
                             {filteredPosts.length > 0 ? (
                                 <div className="space-y-4">
                                     {filteredPosts.map((post) => {
-                                        const postUser = users[post.userId];
+                                        const postUser = users.find(u => u.id === post.userId);
                                         return postUser ? (
                                             <PostCard key={post.id} post={post} user={postUser} />
                                         ) : (
@@ -270,6 +365,59 @@ export default function ExplorePage() {
                             <p>{t.noImagePostsToExplore}</p>
                         </div>
                     )}
+
+                     {/* Kullanıcıları Listele */}
+                    <div className="mt-8">
+                        <h2 className="text-2xl font-bold font-headline mb-4">Kullanıcılar</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filteredUsers.length > 0 ? (
+                                filteredUsers.map((targetUser) => (
+                                    <Card key={targetUser.id} className="p-4">
+                                        <div className="flex items-center space-x-3">
+                                            <Avatar>
+                                                <DisplayImage imageKey={targetUser.avatarUrl} alt={targetUser.name} className="w-full h-full object-cover" width={40} height={40} />
+                                                <AvatarFallback>{targetUser.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1">
+                                                <p className="font-semibold">{targetUser.name}</p>
+                                                <p className="text-sm text-muted-foreground">@{targetUser.username}</p>
+                                                {targetUser.bio && <p className="text-sm text-muted-foreground mt-1">{targetUser.bio}</p>}
+                                            </div>
+                                            <div className="flex gap-2">
+                                                {user && targetUser.uid !== user?.uid && (
+                                                    <Button
+                                                        onClick={() => handleFollowToggle(targetUser)}
+                                                        disabled={updatingFollow.has(targetUser.uid)}
+                                                        variant={followingUsers.has(targetUser.uid) ? "outline" : "default"}
+                                                        size="sm"
+                                                    >
+                                                        {updatingFollow.has(targetUser.uid) ? (
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                        ) : followingUsers.has(targetUser.uid) ? (
+                                                            'Takipten Çıkar'
+                                                        ) : (
+                                                            'Takip Et'
+                                                        )}
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => window.location.href = `/profile/${targetUser.username}`}
+                                                >
+                                                    {t.viewProfile}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                ))
+                            ) : (
+                                <div className="text-center py-8 text-muted-foreground col-span-full">
+                                    <p>Keşfedilecek kullanıcı bulunamadı.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
         </div>
